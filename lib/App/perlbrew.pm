@@ -308,7 +308,7 @@ sub parse_cmdline {
         'quiet|q!',
         'verbose|v',
         'as=s',
-	'append=s',
+      	'append=s',
         'help|h',
         'version',
         'root=s',
@@ -1157,6 +1157,9 @@ sub run_command_install_multiple {
 
 sub run_command_download {
     my ($self, $dist) = @_;
+
+    $dist = $self->resolve_stable_version
+        if $dist && $dist eq 'stable';
 
     my ($dist_version) = $dist =~ /^ (?:perl-?)? (.*) $/xs;
 
@@ -2612,14 +2615,15 @@ end
 
 function __perlbrew_deactivate
     __perlbrew_set_env
-    set -r PERLBREW_PERL
-    set -r PERLBREW_LIB
+    set -x PERLBREW_PERL
+    set -x PERLBREW_LIB
+    set -x PERLBREW_PATH
     __perlbrew_set_path
 end
 
 function perlbrew
 
-    test -z $argv
+    test -z "$argv"
     and echo "    Usage: perlbrew <command> [options] [arguments]"
     and echo "       or: perlbrew help"
     and return 1
@@ -2671,7 +2675,7 @@ if test -z "$PERLBREW_ROOT"
     set -x PERLBREW_ROOT "$HOME/perl5/perlbrew"
 end
 
-if test -x "$PERLBREW_HOME"
+if test -z "$PERLBREW_HOME"
     set -x PERLBREW_HOME "$HOME/.perlbrew"
 end
 
@@ -2903,16 +2907,15 @@ App::perlbrew - Manage perl installations in your $HOME
     perlbrew available
 
     # Install some Perls
-    perlbrew install 5.14.0
+    perlbrew install 5.18.2
     perlbrew install perl-5.8.1
-    perlbrew install perl-5.13.6
+    perlbrew install perl-5.19.9
 
     # See what were installed
     perlbrew list
 
-    # Switch perl in the $PATH
-    perlbrew switch perl-5.12.2
-    perl -v
+    # Swith to an installation and set it as default
+    perlbrew switch perl-5.18.2
 
     # Temporarily use another version only in current shell.
     perlbrew use perl-5.8.1
@@ -2931,11 +2934,13 @@ App::perlbrew - Manage perl installations in your $HOME
 =head1 DESCRIPTION
 
 perlbrew is a program to automate the building and installation of perl in an
-easy way. It installs everything to C<~/perl5/perlbrew>, and requires you to
-tweak your PATH by including a bashrc/cshrc file it provides. You then can
-benefit from not having to run 'sudo' commands to install cpan modules because
-those are installed inside your HOME too. It provides multiple isolated perl
-environments, and a mechanism for you to switch between them.
+easy way. It provides multiple isolated perl environments, and a mechanism
+for you to switch between them.
+
+Everything are installed unter C<~/perl5/perlbrew>. You then need to include a
+bashrc/cshrc provided by perlbrew to tweak the PATH for you. You then can
+benefit from not having to run 'sudo' commands to install
+cpan modules because those are installed inside your HOME too.
 
 For the documentation of perlbrew usage see L<perlbrew> command
 on CPAN, or by running C<perlbrew help>. The following documentation
@@ -3032,7 +3037,7 @@ Kang-min Liu  C<< <gugod@gugod.org> >>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2010, 2011, 2012 Kang-min Liu C<< <gugod@gugod.org> >>.
+Copyright (c) 2010,2011,2012,2013,2014 Kang-min Liu C<< <gugod@gugod.org> >>.
 
 =head1 LICENCE
 
